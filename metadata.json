@@ -1,0 +1,8 @@
+{
+  "$schema": "../CTAutocomplete/schema.json",
+  "name": "GemstoneProfitTracker",
+  "creator": "averithefox",
+  "description": "rawr~",
+  "version": "0.0.1",
+  "entry": "index.js"
+}
