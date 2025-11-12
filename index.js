@@ -261,7 +261,7 @@ register(
         add(drops, id, count);
       }
 
-      if (start === -1) {
+      if (drops.size && start === -1) {
         start = Date.now();
       }
       lastUpdate = Date.now();
