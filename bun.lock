@@ -1,0 +1,15 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "dependencies": {
+        "arkregex": "^0.0.2",
+      },
+    },
+  },
+  "packages": {
+    "@ark/util": ["@ark/util@0.53.0", "", {}, "sha512-TGn4gLlA6dJcQiqrtCtd88JhGb2XBHo6qIejsDre+nxpGuUVW4G3YZGVrwjNBTO0EyR+ykzIo4joHJzOj+/cpA=="],
+
+    "arkregex": ["arkregex@0.0.2", "", { "dependencies": { "@ark/util": "0.53.0" } }, "sha512-ttjDUICBVoXD/m8bf7eOjx8XMR6yIT2FmmW9vsN0FCcFOygEZvvIX8zK98tTdXkzi0LkRi5CmadB44jFEIyDNA=="],
+  }
+}

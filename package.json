@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "arkregex": "^0.0.2"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --target browser --outfile dist/index.js && cat metadata.json | jq \".entry=\\\"index.js\\\" | .version=\\\"$(./version.sh)\\\"\" > dist/metadata.json"
+  }
+}
