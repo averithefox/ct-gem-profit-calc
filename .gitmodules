@@ -1,0 +1,3 @@
+[submodule "CTAutocomplete"]
+	path = CTAutocomplete
+	url = git@github.com:averithefox/CTAutocomplete.git
