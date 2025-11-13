@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { GET } from './http';
+
 export type Order = {
   amount: number;
   pricePerUnit: number;
@@ -48,27 +50,6 @@ export type BazaarResponse = {
 export let bazaarData: BazaarResponse | null = null;
 
 export function fetchBazaarData(): BazaarResponse | null {
-  const URL = Java.type('java.net.URL');
-  const BufferedReader = Java.type('java.io.BufferedReader');
-  const InputStreamReader = Java.type('java.io.InputStreamReader');
-  const StringBuilder = Java.type('java.lang.StringBuilder');
-
-  const url = new URL('https://api.hypixel.net/v2/skyblock/bazaar');
-  const conn = url.openConnection();
-  conn.setRequestMethod('GET');
-  if (conn.getResponseCode() !== 200) {
-    return null;
-  }
-
-  const reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-  let line;
-  const res = new StringBuilder();
-  while ((line = reader.readLine()) !== null) {
-    res.append(line);
-  }
-  reader.close();
-
-  bazaarData = JSON.parse(res.toString());
+  bazaarData = JSON.parse(GET('https://api.hypixel.net/v2/skyblock/bazaar') ?? 'null');
   return bazaarData;
 }

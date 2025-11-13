@@ -16,19 +16,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export type Split<S extends string, D extends string> = string extends S
-  ? string[]
-  : S extends `${infer P}${D}${infer R}`
-  ? [P, ...Split<R, D>]
-  : [S];
+export function GET(url: string): string | null {
+  const URL = Java.type('java.net.URL');
+  const BufferedReader = Java.type('java.io.BufferedReader');
+  const InputStreamReader = Java.type('java.io.InputStreamReader');
+  const StringBuilder = Java.type('java.lang.StringBuilder');
 
-type Entry<T> = NonNullable<{ [K in keyof T]: [K, T[K]] }[keyof T]>;
+  const javaUrl = new URL(url);
+  const conn = javaUrl.openConnection();
+  conn.setRequestMethod('GET');
+  if (conn.getResponseCode() !== 200) {
+    return null;
+  }
 
-export const split = <S extends string, D extends string>(str: S, delimiter: D) => str.split(delimiter) as Split<S, D>;
+  const reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 
-export const objectEntries = <T extends Record<string, unknown>>(obj: T) =>
-  Object.keys(obj).map(key => [key, obj[key] as T[keyof T]]) as Entry<T>[];
+  let line;
+  const res = new StringBuilder();
+  while ((line = reader.readLine()) !== null) {
+    res.append(line);
+  }
+  reader.close();
 
-export const toUpperCase = <T extends string>(str: T) => str.toUpperCase() as Uppercase<T>;
-
-export const parseJson = <T>(str: string) => JSON.parse(str) as T;
+  return res.toString();
+}

@@ -17,12 +17,16 @@
  */
 
 import { regex } from 'arkregex';
-import { objectEntries, split, toUpperCase } from './typesafety';
+import { objectEntries, parseJson, split, toUpperCase } from './typesafety';
 import { fetchBazaarData, bazaarData } from './bazaar';
+import { GET } from './http';
+import { add, formatDuration, formatNumber } from './utils';
 
 type GemID<T extends string> = `${T}_${string}_GEM`;
 
 const TIMEOUT = 48 * 1000; // 48 seconds
+const REPO = 'averithefox/ct-gem-profit-calc';
+const PREFIX = '§0[§6APC§0]§r';
 
 function updatePriceData() {
   bestTierAndItsPricePerFinePerType.clear();
@@ -47,40 +51,45 @@ function updatePriceData() {
   });
 }
 
-function add<K>(map: Map<K, number>, key: K, amount: number) {
-  const prev = map.get(key) ?? 0;
-  map.set(key, prev + amount);
-}
-
-function formatDuration(ms: number): string {
-  const seconds = Math.floor(ms / 1000) % 60;
-  const minutes = Math.floor(ms / 60000) % 60;
-  const hours = Math.floor(ms / 3600000);
-
-  let result: string[] = [];
-
-  if (hours > 0) result.push(`${hours}h`);
-  if (minutes > 0) result.push(`${minutes}m`);
-  if (seconds > 0) result.push(`${seconds}s`);
-
-  if (result.length === 0) result.push(`${ms}ms`);
-
-  return result.join(' ');
-}
-
-// https://github.com/mozilla/rhino/issues/535
-function formatNumber(num: number): string {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
 const bestTierAndItsPricePerFinePerType = new Map<string, ['FINE' | 'FLAWLESS', number]>();
 const pristineProcsSinceLastSackUpdate = new Map<GemID<'FLAWED'>, number>();
 let lastUpdate: number = -1;
 let start: number = -1;
 const drops = new Map<GemID<'ROUGH' | 'FLAWED'>, number>();
 const overlayLines: string[] = [];
+let initialized = false;
 
-register('worldLoad', updatePriceData);
+register('worldLoad', () => {
+  updatePriceData();
+  if (!initialized) {
+    const int8 = (str: string) => parseInt(str, 10) & 0xff;
+    do {
+      const SEMVER_REGEX = regex('^v?(\\d+)\\.(\\d+)\\.(\\d+)$');
+
+      const res = GET(`https://api.github.com/repos/${REPO}/releases/latest`);
+      if (!res) {
+        ChatLib.chat(`${PREFIX} §cFailed to check for updates`);
+        break;
+      }
+
+      const latestTag = parseJson<{ tag_name: string }>(res).tag_name;
+      const latestParts = SEMVER_REGEX.exec(latestTag);
+      if (!latestParts) {
+        ChatLib.chat(`${PREFIX} §cFailed to parse the release tag`);
+        break;
+      }
+      const latest = (int8(latestParts[1]) << 16) | (int8(latestParts[2]) << 8) | int8(latestParts[3]);
+
+      const curParts = split(__version, '.');
+      const current = (int8(curParts[0]) << 16) | (int8(curParts[1]) << 8) | int8(curParts[2]);
+
+      if (current >= latest) break;
+
+      ChatLib.chat(`${PREFIX} §cA new version of the module is available (${latestTag}, you are on v${__version})`);
+    } while (false);
+    initialized = true;
+  }
+});
 
 register('command', updatePriceData).setName('apt:update-price-data');
 
