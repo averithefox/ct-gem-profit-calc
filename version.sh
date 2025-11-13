@@ -11,19 +11,17 @@ if [ -z "$COMMITS" ]; then
   exit 0
 fi
 
-BREAKING_CHANGES=$(echo "$COMMITS" | grep -c "^.*!:" || true)
-FEATURES=$(echo "$COMMITS" | grep -c "^feat" || true)
-FIXES=$(echo "$COMMITS" | grep -c "^fix" || true)
-
-if [ "$BREAKING_CHANGES" -gt 0 ]; then
-  MAJOR=$((MAJOR + 1))
-  MINOR=0
-  PATCH=0
-elif [ "$FEATURES" -gt 0 ]; then
-  MINOR=$((MINOR + 1))
-  PATCH=0
-elif [ "$FIXES" -gt 0 ]; then
-  PATCH=$((PATCH + 1))
-fi
+while IFS= read -r commit; do
+  if [[ "$commit" =~ ^.*!: ]]; then
+    MAJOR=$((MAJOR + 1))
+    MINOR=0
+    PATCH=0
+  elif [[ "$commit" =~ ^feat ]]; then
+    MINOR=$((MINOR + 1))
+    PATCH=0
+  elif [[ "$commit" =~ ^fix ]]; then
+    PATCH=$((PATCH + 1))
+  fi
+done < <(echo "$COMMITS" | tac)
 
 echo "$MAJOR.$MINOR.$PATCH"
