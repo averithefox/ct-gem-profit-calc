@@ -5,18 +5,33 @@ on:
     branches: [master]
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install
+
+      - run: bun run type-check
+
   release:
+    needs: check
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
 
-      - run: bun install
+      - run: bun install --production
 
       - id: version
         run: echo "VERSION=$(./version.sh)" >> $GITHUB_OUTPUT
@@ -37,7 +52,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag v${{ steps.version.outputs.VERSION }}
           git push origin v${{ steps.version.outputs.VERSION }}
-          cd dist && zip -r ../gem-profit-calc-v${{ steps.version.outputs.VERSION }}.zip . && cd ..
-          gh release create v${{ steps.version.outputs.VERSION }} gem-profit-calc-v${{ steps.version.outputs.VERSION }}.zip --title "v${{ steps.version.outputs.VERSION }}"
+          cd dist && zip -r ../gem-profit-calc.zip . && cd ..
+          gh release create v${{ steps.version.outputs.VERSION }} gem-profit-calc.zip --title "v${{ steps.version.outputs.VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
