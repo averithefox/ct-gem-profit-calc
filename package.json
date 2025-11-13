@@ -7,6 +7,6 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
-    "build": "version=$(./version.sh) && jq \".entry=\\\"index.js\\\" | .version=\\\"$version\\\"\" metadata.json > dist/metadata.json && bun build src/index.ts --target browser --outfile dist/index.js --define __version=\\\"$version\\\""
+    "build": "version=$(./version.sh) && mkdir -p dist && jq \".entry=\\\"index.js\\\" | .version=\\\"$version\\\"\" metadata.json > dist/metadata.json && bun build src/index.ts --target browser --outfile dist/index.js --define __version=\\\"$version\\\""
   }
 }
