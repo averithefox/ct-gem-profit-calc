@@ -1,6 +1,6 @@
 {
   "$schema": "../CTAutocomplete/schema.json",
-  "name": "GemstoneProfitTracker",
+  "name": "GemstoneProfitCalculator",
   "creator": "averithefox",
   "description": "rawr~",
   "version": "dev",
