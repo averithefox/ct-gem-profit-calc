@@ -55,7 +55,7 @@ const bestTierAndItsPricePerFinePerType = new Map<string, ['FINE' | 'FLAWLESS', 
 const pristineProcsSinceLastSackUpdate = new Map<GemID<'FLAWED'>, number>();
 let lastUpdate: number = -1;
 let start: number = -1;
-const drops = new Map<GemID<'ROUGH' | 'FLAWED'>, number>();
+const drops = new Map<GemID<'ROUGH' | 'FLAWED'> | 'GLOSSY_GEMSTONE', number>();
 const overlayLines: string[] = [];
 let initialized = false;
 
@@ -106,7 +106,12 @@ register('tick', () => {
   if (!bazaarData) return;
 
   const finePerType = new Map<string, number>();
+  let glossies = 0;
   Array.from(drops.entries()).forEach(([id, amount]) => {
+    if (id === 'GLOSSY_GEMSTONE') {
+      glossies += amount;
+      return;
+    }
     const [tier, gem] = split(id, '_');
     const divisor = {
       ROUGH: 6400,
@@ -120,11 +125,13 @@ register('tick', () => {
   const uptimeMs = Date.now() - start;
   const uptime = formatDuration(uptimeMs);
 
-  const profit = finePerTypeEntries.reduce((acc, [gem, amount]) => {
-    const [, pricePerFine] = bestTierAndItsPricePerFinePerType.get(gem) ?? [];
-    if (!pricePerFine) return acc;
-    return acc + amount * pricePerFine;
-  }, 0);
+  const profit =
+    finePerTypeEntries.reduce((acc, [gem, amount]) => {
+      const [, pricePerFine] = bestTierAndItsPricePerFinePerType.get(gem) ?? [];
+      if (!pricePerFine) return acc;
+      return acc + amount * pricePerFine;
+    }, 0) +
+    ((bazaarData.products['GLOSSY_GEMSTONE']?.quick_status.buyPrice ?? 0) - 1) * glossies;
   const profitPerHour = profit * (3_600_000 / uptimeMs);
 
   overlayLines.length = 0;
@@ -132,6 +139,11 @@ register('tick', () => {
     `$${formatNumber(Math.floor(profit))} / ${uptime}`,
     `$/hr: $${formatNumber(Math.floor(profitPerHour))}`
   );
+  if (glossies) {
+    overlayLines.push(
+      `+${formatNumber(glossies)} Glossy Gemstone${glossies === 1 ? '' : 's'} (${glossies * (3_600_000 / uptimeMs)}/hr)`
+    );
+  }
 });
 
 register('renderOverlay', () => {
@@ -156,14 +168,15 @@ register('chat', ((ev: ForgeTClientChatReceivedEvent) => {
       .split('\n')
       .slice(1, -2)
       .forEach(line => {
-        const theRegex = regex('^\\+([0-9,]+) . (Rough|Flawed) (\\w+) Gemstone \\(Gemstones Sack\\)$');
+        const theRegex = regex('^\\+([0-9,]+) . (?:(Rough|Flawed) (\\w+)|Glossy) Gemstone \\(\\w+ Sack\\)$');
         const parts = theRegex.exec(line.trim());
         if (!parts) return;
         const [, amountStr, tier, gem] = parts;
+        let amount = parseInt(amountStr.replace(/,/g, ''));
+        if (!tier || !gem) return add(drops, 'GLOSSY_GEMSTONE', amount);
         const id = toUpperCase(`${tier}_${gem}_GEM` as const);
         const accountedFor = pristineProcsSinceLastSackUpdate.get(id as GemID<'FLAWED'>) ?? 0;
-        let amount = parseInt(amountStr.replace(/,/g, '')) - accountedFor;
-        add(drops, id, amount);
+        add(drops, id, amount - accountedFor);
       });
     pristineProcsSinceLastSackUpdate.clear();
   } else {
