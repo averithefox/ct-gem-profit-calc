@@ -141,7 +141,9 @@ register('tick', () => {
   );
   if (glossies) {
     overlayLines.push(
-      `+${formatNumber(glossies)} Glossy Gemstone${glossies === 1 ? '' : 's'} (${glossies * (3_600_000 / uptimeMs)}/hr)`
+      `+${formatNumber(Math.floor(glossies))} Glossy Gemstone${glossies === 1 ? '' : 's'} (${
+        glossies * (3_600_000 / uptimeMs)
+      }/hr)`
     );
   }
 });
