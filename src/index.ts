@@ -168,7 +168,7 @@ register('chat', ((ev: ForgeTClientChatReceivedEvent) => {
       .split('\n')
       .slice(1, -2)
       .forEach(line => {
-        const theRegex = regex('^\\+([0-9,]+) . (?:(Rough|Flawed) (\\w+)|Glossy) Gemstone \\([^)]+\\)$');
+        const theRegex = regex('^\\+([0-9,]+) (?:. (Rough|Flawed) (\\w+)|Glossy) Gemstone \\([^)]+\\)$');
         const parts = theRegex.exec(line.trim());
         if (!parts) return;
         const [, amountStr, tier, gem] = parts;
